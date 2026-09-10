@@ -1,0 +1,980 @@
+{
+  "name": "AI Lead Qualification & Sales Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        3040,
+        -368
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Webhook",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const body = $json.body || $json;\n\nconst name = String(body.name || '').trim();\nconst email = String(body.email || '').trim().toLowerCase();\nconst company = String(body.company || '').trim();\nconst website = String(body.website || '').trim();\nconst job_title = String(body.job_title || '').trim();\nconst message = String(body.message || '').trim();\nconst source = String(body.source || 'Unknown').trim();\n\nconst errors = [];\n\nif (!name) errors.push('Name is required');\n\nif (!email) {\n  errors.push('Email is required');\n} else if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {\n  errors.push('Invalid email address');\n}\n\nif (!company) errors.push('Company is required');\n\nif (!message) errors.push('Message is required');\n\nreturn {\n  json: {\n    valid: errors.length === 0,\n    errors,\n    name,\n    email,\n    company,\n    website,\n    job_title,\n    message,\n    source,\n    received_at: new Date().toISOString()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3248,
+        -176
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "REPLACE_WITH_N8N_ID",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3248,
+        -560
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "AI Lead CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "email",
+              "lookupValue": "={{ $json.lookup_email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3424,
+        -368
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "REPLACE_WITH_N8N_ID",
+              "name": "lookup_email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3248,
+        -368
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const crmResult = $json;\nconst lead = $('Edit Fields').first().json;\n\nconst duplicateFound = Object.keys(crmResult).length > 0;\n\nreturn {\n  json: {\n    ...lead,\n    duplicate_found: duplicateFound,\n    duplicate_record: duplicateFound ? crmResult : null\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3584,
+        -368
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "REPLACE_WITH_N8N_ID",
+              "leftValue": "={{ $json.duplicate_found }}",
+              "rightValue": "false",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3728,
+        -368
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.website }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3888,
+        -368
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Company Research"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const lead = $('If1').first().json;\nconst html = String($json.data || '');\n\nconst companyText = html\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, '')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, '')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&nbsp;/gi, ' ')\n  .replace(/&amp;/gi, '&')\n  .replace(/\\s+/g, ' ')\n  .trim();\n\nreturn {\n  json: {\n    ...lead,\n    company_research: companyText.slice(0, 8000),\n    research_source: lead.website\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4032,
+        -368
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Clean Company Research"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional B2B lead qualification assistant.\n\nAnalyze the lead information below and qualify the sales opportunity.\n\nLead name: {{ $json.name }}\nCompany: {{ $json.company }}\nJob title: {{ $json.job_title }}\nLead message: {{ $json.message }}\nCompany research: {{ $json.research_summary || $json.cleaned_research || '' }}\n\nReturn ONLY these fields:\n\nscore: A number from 0 to 1\nclassification: HOT, WARM, or COLD\nbuying_intent: High, Medium, or Low\nreason: One short sentence explaining why this lead received this score\nrecommended_action: One short sales action only\n\nRules:\n- Do NOT write an email.\n- Do NOT include Subject.\n- Do NOT include Body.\n- Do NOT include greetings or signatures.\n- recommended_action must be a simple action, for example:\n  \"Book a 20-minute discovery call\"\n  \"Send a follow-up next week\"\n  \"Add to nurture list\"",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4192,
+        -368
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "AI Lead Qualification"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini",
+          "cachedResultName": "gpt-5-mini",
+          "cachedResultUrl": ""
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        4128,
+        -144
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"score\": 70,\n  \"classification\": \"WARM\",\n  \"buying_intent\": \"medium\",\n  \"reason\": \"The lead shows clear interest in automating the sales process and is a decision-maker.\",\n  \"recommended_action\": \"Schedule a discovery call to confirm goals, budget, and timeline.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4320,
+        -144
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "const ai = $json.output || {};\n\nconst lead = $('Clean Company Research').first().json;\n\nreturn [\n  {\n    json: {\n      ...lead,\n     score: Math.round(Number(ai.score || 0) * 100),\nclassification:\n  Number(ai.score || 0) >= 0.8 ? 'HOT' :\n  Number(ai.score || 0) >= 0.5 ? 'WARM' :\n  'COLD',\n      buying_intent: String(ai.buying_intent || 'low').toLowerCase(),\n      qualification_reason: String(ai.reason || ''),\n      recommended_action: String(ai.recommended_action || ''),\n      qualified_at: new Date().toISOString()\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4432,
+        -608
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Parse AI Qualification"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.classification }}",
+                    "rightValue": "={{ \"HOT\" }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "REPLACE_WITH_N8N_ID"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "=HOT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "REPLACE_WITH_N8N_ID",
+                    "leftValue": "={{ $json.classification }}",
+                    "rightValue": "={{ \"WARM\" }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "WARM"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "REPLACE_WITH_N8N_ID",
+                    "leftValue": "={{ $json.classification }}",
+                    "rightValue": "={{ \"COLD\" }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "COLD"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        4496,
+        -368
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Lead Score Routing"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "AI Lead CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $json.email }}",
+            "name": "={{ $json.name }}",
+            "company": "={{ $json.company }}",
+            "website": "={{ $json.website }}",
+            "job_title": "={{ $json.job_title }}",
+            "message": "={{ $json.message }}",
+            "source": "={{ $json.source }}",
+            "score": "={{ $json.score }}",
+            "status": "={{ $json.classification }}",
+            "next_action": "={{ $json.recommended_action }}",
+            "created_at": "={{ $json.received_at }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "next_action",
+              "displayName": "next_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4688,
+        -352
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a professional B2B sales email writer.\n\nCreate a short, personalized outreach email for this qualified lead.\n\nLead name: {{ $json.name }}\nCompany: {{ $json.company }}\nJob title: {{ $json.job_title }}\nLead message: {{ $json.message }}\nLead classification: {{ $json.classification }}\nLead score: {{ $json.score }}\nReason: {{ $json.qualification_reason }}\n\nRequirements:\n- Address the lead by name.\n- Mention their company.\n- Refer to their actual business need.\n- Keep the email professional and natural.\n- Do not exaggerate or make false claims.\n- Keep it under 120 words.\n- Include a clear but low-pressure call to action.\n- Return only the email subject and email body.\n\nFormat:\n\nSubject: ...\nBody:\n..."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        4656,
+        -528
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.output?.[0]?.content?.[0]?.text || '';\n\nconst cleanText = text\n  .replace(/\\\\n/g, '\\n')\n  .trim();\n\nconst subjectMatch = cleanText.match(/Subject:\\s*(.+?)(?:\\n|$)/i);\n\nconst email_subject = subjectMatch\n  ? subjectMatch[1].trim()\n  : 'Quick chat about automating your sales process';\n\nlet email_body = cleanText\n  .replace(/Subject:\\s*.+?(?:\\n|$)/i, '')\n  .replace(/Body:\\s*/i, '')\n  .trim();\n\nemail_body = email_body\n  .replace(/\\[Your Name\\]/gi, 'Danyal Malik')\n  .replace(/\\[Your Company\\]/gi, 'AI Automation Services')\n  .trim();\n\nreturn {\n  json: {\n    email_subject,\n    email_body\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4944,
+        -528
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Parse Outreach Email"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Code in JavaScript').first().json.email }}",
+        "subject": "={{ $json.email_subject }}",
+        "message": "={{ $json.email_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        5136,
+        -528
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Send a message",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5328,
+        -528
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Wait",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Edit Fields').first().json.email }}",
+        "subject": "=Follow-up: {{ $json.company }} sales automation",
+        "message": "=Hi {{ $json.name }},  Just following up on my previous email regarding {{ $json.company }}'s sales automation needs.  I’d be happy to discuss how we can simplify lead management, follow-ups, and other sales tasks.  Would you be available for a brief call next week?  Best, Danyal AI Automation Services",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        5344,
+        -320
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Send a message1",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "AI Lead CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "email",
+              "lookupValue": "={{ $('Edit Fields').first().json.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4944,
+        -320
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Get row(s) in sheet1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "REPLACE_WITH_N8N_ID",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "REPLIED",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        5136,
+        -320
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "If2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Company Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Company Research": {
+      "main": [
+        [
+          {
+            "node": "Clean Company Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Company Research": {
+      "main": [
+        [
+          {
+            "node": "AI Lead Qualification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Lead Qualification",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Lead Qualification",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Lead Qualification": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Qualification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Qualification": {
+      "main": [
+        [
+          {
+            "node": "Lead Score Routing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Score Routing": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Parse Outreach Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Outreach Email": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "YOUR_ERROR_WORKFLOW_ID",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "nodeGroups": [],
+  "id": "X2cExKkxNaOCzT8d",
+  "tags": []
+}

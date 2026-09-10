@@ -1,0 +1,61 @@
+{
+  "name": "AI Lead Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "your-email@example.com",
+        "subject": "🚨 AI Lead Workflow Error",
+        "message": "=<h3>🚨 AI Lead Workflow Error</h3> <p><strong>Workflow:</strong> AI Lead Qualification & Sales Automation</p> <p><strong>Error:</strong> {{ $json.execution?.error?.message || $json.error?.message || 'An unknown error occurred' }}</p> <p><strong>Time:</strong> {{ $now }}</p> <p>Please check the failed execution in n8n.</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "REPLACE_WITH_N8N_ID",
+      "name": "Send a message",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "id": "YOUR_ERROR_WORKFLOW_ID",
+  "tags": []
+}
